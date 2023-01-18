@@ -29,7 +29,7 @@ This is the view that you should probably get familiar with first. It's the main
 - Selected object panel (2)
 - Map panel (3)
 
-<center><img src="img/mainwindow.png" alt="Main window" width="500"/>Main window of the application</center>
+<p align="center"><img src="img/mainwindow.png" /></p>
 
 #### Animal addition panel
 This panel is used to add new animals to the simulation. It contains 3 buttons:
@@ -45,17 +45,17 @@ This panel is used to display information about the selected object. Additionall
 - Reroute - after selecting prey, click on a path object (the light one or the darker one), the prey will then start moving towards this location.
 
 ##### Selected object panel for animal
-<center><img src="img/animal.png" alt="Selected animal" width="500"/></center>
+<p align="center"><img src="img/animal.png" /></p>
 
 
 ##### Selected object panel for location
-<center><img src="img/location.png" alt="Selected location" width="500"/></center>
+<p align="center"><img src="img/location.png" /></p>
 
 #### Map panel
 It simply displays the whole world on a map. You can click a specific object to see its properties, or if it's a prey, you can reroute it.
 
 ##### An example of active simulation panel
-<center><img src="img/map.png" alt="Map" width="500"/></center>
+<p align="center"><img src="img/map.png" /></p>
 
 ## Final remarks
 This project is under MIT license which is also accesable in this repository.
