@@ -9,17 +9,17 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="mainVBox" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="751.0" prefWidth="874.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oopproject.gui.MainWindowController">
+<VBox fx:id="mainVBox" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="654.0" prefWidth="523.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oopproject.gui.MainWindowController">
    <children>
-      <TitledPane alignment="TOP_CENTER" animated="false" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="291.0" prefWidth="747.0" text="Menu">
+      <TitledPane animated="false" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="200.0" prefWidth="504.0" text="Menu">
          <content>
-            <HBox maxWidth="1.7976931348623157E308" minWidth="-Infinity" prefHeight="187.0" prefWidth="700.0">
+            <HBox prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <VBox alignment="TOP_CENTER" prefHeight="150.0" prefWidth="251.0">
+                  <VBox prefHeight="200.0" prefWidth="100.0">
                      <children>
                         <TitledPane animated="false" collapsible="false" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="105.0" prefWidth="251.0" text="Add animal">
                            <content>
-                              <VBox prefHeight="157.0" prefWidth="249.0">
+                              <VBox prefHeight="200.0" prefWidth="100.0">
                                  <children>
                                     <TextField fx:id="animalTextField">
                                        <VBox.margin>
@@ -51,52 +51,26 @@
                               <Insets top="10.0" />
                            </VBox.margin>
                         </Button>
-                        <Canvas fx:id="bombsCanvas" height="85.0" width="240.0">
-                           <VBox.margin>
-                              <Insets bottom="10.0" top="10.0" />
-                           </VBox.margin>
-                        </Canvas>
                      </children>
                      <HBox.margin>
                         <Insets right="10.0" />
                      </HBox.margin>
                   </VBox>
-                  <TitledPane animated="false" collapsible="false" prefHeight="245.0" prefWidth="304.0" text="Selected object">
+                  <TitledPane animated="false" collapsible="false" prefHeight="155.0" prefWidth="284.0" text="Selected object">
                      <content>
-                        <VBox minHeight="-Infinity" prefHeight="220.0" prefWidth="308.0">
+                        <VBox minHeight="-Infinity" prefHeight="130.0" prefWidth="227.0">
                            <children>
-                              <Label fx:id="objectLabel" alignment="TOP_LEFT" maxHeight="1.7976931348623157E308" prefHeight="173.0" prefWidth="320.0" text="Select an object" />
-                              <HBox alignment="TOP_CENTER" prefHeight="30.0" prefWidth="181.0">
-                                 <children>
-                                    <Button alignment="TOP_CENTER" mnemonicParsing="false" onMouseClicked="#killAnimal" text="Kill">
-                                       <HBox.margin>
-                                          <Insets right="20.0" />
-                                       </HBox.margin>
-                                    </Button>
-                                    <Button alignment="TOP_CENTER" mnemonicParsing="false" onMouseClicked="#rerouteAnimal" text="Reroute">
-                                       <HBox.margin>
-                                          <Insets left="20.0" />
-                                       </HBox.margin>
-                                    </Button>
-                                 </children>
-                                 <opaqueInsets>
-                                    <Insets />
-                                 </opaqueInsets>
-                              </HBox>
+                              <Label fx:id="propertiesViewLabel" text="Label" />
                            </children>
                         </VBox>
                      </content>
                   </TitledPane>
-                  <Canvas fx:id="objectCanvas" height="246.0" width="146.0">
-                     <HBox.margin>
-                        <Insets left="10.0" />
-                     </HBox.margin>
-                  </Canvas>
+                  <VBox prefHeight="200.0" prefWidth="100.0" />
                </children>
             </HBox>
          </content>
       </TitledPane>
-      <TitledPane fx:id="mapTitledPane" alignment="TOP_LEFT" animated="false" collapsible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="504.0" prefWidth="809.0" text="Map" VBox.vgrow="ALWAYS">
+      <TitledPane fx:id="mapTitledPane" alignment="TOP_LEFT" animated="false" collapsible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="454.0" prefWidth="458.0" text="Map" VBox.vgrow="ALWAYS">
          <content>
             <Canvas fx:id="mapCanvas" height="200.0" width="200.0" />
          </content>

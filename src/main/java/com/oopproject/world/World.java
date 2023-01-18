@@ -1,22 +1,32 @@
 package com.oopproject.world;
 
+//import mapper
+import com.oopproject.Pathfinder;
 import com.oopproject.gui.Mapper;
 import com.oopproject.world.animals.Animal;
 import com.oopproject.world.animals.Predator;
 import com.oopproject.world.animals.Prey;
 import com.oopproject.world.factories.AnimalFactory;
-import com.oopproject.world.map.Map;
+import com.oopproject.world.factories.LocationFactory;
+import com.oopproject.world.locations.Location;
 import javafx.animation.AnimationTimer;
-import java.util.ArrayList;
+import javafx.util.Pair;
 
-/**
- * A singleton class that represents the world.
- */
+import java.util.ArrayList;
+import java.util.HashMap;
+//tuple
+import com.oopproject.world.locations.*;
+
+import static java.lang.Thread.sleep;
+
 public class World {
+    // set the random seed
     private Mapper mapper;
     private AnimalFactory animalFactory;
+    private LocationFactory locationFactory;
     private ArrayList<Animal> animals;
     private Map map;
+    private HashMap<Pair<Integer, Integer>, Location> map_locations;
     private boolean running = false;
     private AnimationTimer timer = new AnimationTimer() {
         @Override
@@ -24,49 +34,51 @@ public class World {
             step();
         }
     };
+    private Pathfinder pathfinder;
+    public World(Mapper mapper){
+        // set random seed
+        this.setMapper(mapper);
+        this.animals = new ArrayList<>();
+        this.locationFactory = new LocationFactory();
+        this.map_locations = new HashMap();
+        this.pathfinder = new Pathfinder(map_locations);
+        System.out.println("World created");
+        create_locations();
+        add_paths();
+        mapper.drawMap(map_locations);
+        this.map = new Map(map_locations);
+        this.animalFactory = new AnimalFactory(map, animals);
+    }
 
-    /**
-     * Get the information about the object.
-     * @param x x coordinate of the object
-     * @param y y coordinate of the object
-     * @return the information about the object
-     */
-    public String getObjectInfo(int x, int y) {
-        for (Animal animal : getAnimals()) {
-            if (animal.getX() == x && animal.getY() == y) {
-                return animal.toString();
+    private void create_locations(){
+        int waternum = 0;
+        int foodnum = 0;
+        int hidenum = 0;
+
+        while (waternum < 10 || foodnum < 10 || hidenum < 5){
+            Location food = this.locationFactory.createLocation("Food", (int) (Math.random() * 22), (int) (Math.random() * 22));
+            Location water = this.locationFactory.createLocation("Water", (int) (Math.random() * 22), (int) (Math.random() * 22));
+            if(!this.map_locations.containsKey(new Pair<>(food.getX(), food.getY())) && foodnum < 10){
+                this.map_locations.put(new Pair<>(food.getX(), food.getY()), food);
+                foodnum++;
+            }
+            if(!this.map_locations.containsKey(new Pair<>(water.getX(), water.getY())) && waternum < 10){
+                this.map_locations.put(new Pair<>(water.getX(), water.getY()), water);
+                waternum++;
+            }
+            Location hideout = this.locationFactory.createLocation("Hideout", (int) (Math.random() * 22), (int) (Math.random() * 22));
+            if (!this.map_locations.containsKey(new Pair<>(hideout.getX(), hideout.getY())) && hidenum < 5){
+                this.map_locations.put(new Pair<>(hideout.getX(), hideout.getY()), hideout);
+                hidenum++;
             }
         }
-        if (map.getLocation(x, y) != null) {
-            return map.getLocation(x, y).toString();
-        }
-        else {
-            return "Nothing here, only dirt.";
-        }
+        System.out.println("Map created");
     }
-
-    /**
-     * Constructor
-     * @param mapper - mapper object, used in drawing the map
-     */
-    public World(Mapper mapper){
-        this.setMapper(mapper);
-        this.setAnimals(new ArrayList<>());
-        this.map = new Map();
-        System.out.println("World created");
-        mapper.drawMap(this.map.getLocationHashMap());
-        this.animalFactory = new AnimalFactory(map, getAnimals());
-    }
-
-    /**
-     * Adds prey to the map at the hideout.
-     * @param name name of the prey
-     */
     public void addPrey(String name){
         Prey p = (Prey) this.animalFactory.createAnimal(name, "Prey");
         if (p != null){
             p.setRunning(running);
-            this.getAnimals().add(p);
+            this.animals.add(p);
             new Thread(p).start();
             System.out.println("Prey " + name + " added");
             refreshMap();
@@ -75,100 +87,106 @@ public class World {
         }
 
     }
+    public void terminate(){
+        for (Animal a : animals){
+            a.setHealth(0);
+        }
+        this.running = false;
+        this.timer.stop();
 
-    /**
-     * Adds predator to the map at a random location.
-     * @param name name of the predator
-     */
+    }
     public void addPredator(String name){
         Predator p = (Predator) this.animalFactory.createAnimal(name, "Predator");
         p.setRunning(running);
-        this.getAnimals().add(p);
+        this.animals.add(p);
         new Thread(p).start();
         System.out.println("Predator " + name + " added");
         refreshMap();
     }
-    /**
-     * Runs the whole simulation
-     */
+    private void add_paths() {
+        ArrayList locations = new ArrayList(this.map_locations.values());
+        for (int i = 0; i < locations.size(); i++) {
+            Location loc = (Location) locations.get(i);
+            if (loc instanceof Hideout) {
+                for (int j = 0; j < locations.size(); j++) {
+                    Location loc2 = (Location) locations.get(j);
+                    if (loc2 instanceof Source) {
+                        ArrayList<Pair<Integer, Integer>> path = pathfinder.findPath(loc.getX(), loc.getY(), loc2.getX(), loc2.getY());
+                        for (int k = 0; k < path.size(); k++) {
+                            Pair<Integer, Integer> p = path.get(k);
+                            if (!this.map_locations.containsKey(p)) {
+                                this.map_locations.put(p, new Path(p.getKey(), p.getValue(), 1000));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // iterate through all locations, make paths that have more than 2 walkable tiles have capacity 0
+        locations = new ArrayList(this.map_locations.values());
+        for (int i = 0; i < locations.size(); i++) {
+            Location loc = (Location) locations.get(i);
+            if (loc instanceof Path) {
+                int count_walkable = 0;
+                // check if there are 2 more than 2 paths around it
+                count_walkable += check_von_neumann_for_paths(0, 1, loc);
+                count_walkable += check_von_neumann_for_paths(0, -1, loc);
+                count_walkable += check_von_neumann_for_paths(1, 0, loc);
+                count_walkable += check_von_neumann_for_paths(-1, 0, loc);
+                if (count_walkable > 2) {
+                    loc.setMax_inside(1);
+                }
+            }
+        }
+    }
+
+    private int check_von_neumann_for_paths(int x_offset, int y_offset, Location loc){
+        if (this.map_locations.containsKey(new Pair<>(loc.getX() + x_offset, loc.getY() + y_offset))){
+            Location loc2 = this.map_locations.get(new Pair<>(loc.getX() + x_offset, loc.getY() + y_offset));
+            if (loc2 instanceof Path && loc2.getMax_inside() > 1){
+                return 1;
+            }
+            return 0;
+        }
+        return 0;
+    }
+
+
+
     public void run(){
         running = true;
-        for (int i = 0; i < this.getAnimals().size(); i++){
-            this.getAnimals().get(i).setRunning(true);
+        for (int i = 0; i < this.animals.size(); i++){
+            this.animals.get(i).setRunning(true);
         }
         timer.start();
     }
-
-    /**
-     * Pauses the simulation
-     */
     public void stop(){
         running = false;
-        for (int i = 0; i < this.getAnimals().size(); i++){
-            this.getAnimals().get(i).setRunning(false);
+        for (int i = 0; i < this.animals.size(); i++){
+            this.animals.get(i).setRunning(false);
         }
         timer.stop();
     }
-
-    /**
-     * Refreshes the map
-     */
     public void refreshMap(){
-        this.mapper.drawAnimals(getAnimals());
+        this.mapper.drawAnimals(animals);
     }
-
-    /**
-     * Makes one time step for the main drawing thread
-     */
     public void step(){
             refreshMap();
     }
 
-    /**
-     * Getter for the mapper
-     * @return mapper to handle drawing
-     */
     public Mapper getMapper() {
         return mapper;
     }
 
-    /**
-     * Mapper setter
-     * @param mapper mapper to handle drawing
-     */
     public void setMapper(Mapper mapper) {
         this.mapper = mapper;
     }
 
-    /**
-     * Checks if the simulation is running
-     * @return
-     */
     public boolean isRunning() {
         return running;
     }
 
-    /**
-     * Sets the running state of the simulation
-     * @param running
-     */
     public void setRunning(boolean running) {
         this.running = running;
-    }
-
-    /**
-     * Getter for the animals
-     * @return list of animals
-     */
-    public ArrayList<Animal> getAnimals() {
-        return animals;
-    }
-
-    /**
-     * Setter for the animals
-     * @param animals list of animals
-     */
-    public void setAnimals(ArrayList<Animal> animals) {
-        this.animals = animals;
     }
 }

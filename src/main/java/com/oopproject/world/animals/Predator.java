@@ -1,21 +1,21 @@
 package com.oopproject.world.animals;
 
+import com.oopproject.world.Map;
+import javafx.util.Pair;
+
 import java.util.ArrayList;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Class representing predators that attack pray and roam the map.
+ * @author michal
  */
 public class Predator extends Animal {
-    private boolean attackMode = false;
+    private boolean attack_mode = false;
     private int cooldown;
-    private static final int FIELD_OF_VIEW = 3;
-    public String toString() {
-        return super.toString() + "Attack mode: " + attackMode + "\n" + "Cooldown: " + cooldown + "\n";
-    }
-
-    /**
-     * Move in random direction on the map.
-     */
+    private Map map;
+    private final int field_of_view = 3;
     void moveRandomDirection(){int direction = (int) (Math.random() * 4);
         switch (direction) {
             case 0:
@@ -32,11 +32,6 @@ public class Predator extends Animal {
                 break;
         }
     }
-
-    /**
-     * Fight the prey if on the same location.
-     * @param prey prey to fight
-     */
     private void fight(Prey prey){
         if (this.getStrength() > prey.getStrength()){
             prey.setHealth(prey.getHealth() - (this.getStrength() - prey.getStrength()));
@@ -45,64 +40,49 @@ public class Predator extends Animal {
             this.setHealth(this.getHealth() - (prey.getStrength() - this.getStrength()));
         }
     }
-
-    /**
-     * Find prey in the field of view.
-     * @return prey if found, null otherwise
-     */
     private Prey findClosestPrey(){
-        int minDistance = 1000;
-        Prey closestPrey = null;
+        int min_distance = 1000;
+        Prey closest_prey = null;
         for (Animal animal : this.getAnimals()) {
             if (animal instanceof Prey) {
                 Prey prey = (Prey) animal;
                 int distance = Math.abs(prey.getX() - this.getX()) + Math.abs(prey.getY() - this.getY());
-                if (distance < minDistance && prey.isHidden() == false) {
-                    minDistance = distance;
-                    closestPrey = prey;
+                if (distance < min_distance) {
+                    min_distance = distance;
+                    closest_prey = prey;
                 }
             }
         }
-        return closestPrey;
+        return closest_prey;
     }
-
-    /**
-     * Move towards the prey.
-     * @param preyX prey x coordinate
-     * @param preyY prey y coordinate
-     */
-    void moveTowardsPrey(int preyX, int preyY){
+    void moveTowardsPrey(int prey_x, int prey_y){
         int x = this.getX();
         int y = this.getY();
-        if (x < preyX){
+        if (x < prey_x){
             this.move(1, 0);
         }
-        else if (x > preyX){
+        else if (x > prey_x){
             this.move(-1, 0);
         }
-        else if (y < preyY){
+        else if (y < prey_y){
             this.move(0, 1);
         }
-        else if (y > preyY){
+        else if (y > prey_y){
             this.move(0, -1);
         }
         else {
             this.moveRandomDirection();
         }
     }
-
-    /**
-     * Step method for predator, allowing to perform actions in one time unit.
-     */
     @Override
     public void step(){
-        if (attackMode){
-            Prey closestPreyX = findClosestPrey();
-            if (closestPreyX != null && Math.abs(closestPreyX.getX() - this.getX()) < FIELD_OF_VIEW && Math.abs(closestPreyX.getY() - this.getY()) < FIELD_OF_VIEW){
-                moveTowardsPrey(closestPreyX.getX(), closestPreyX.getY());
-                if (closestPreyX.getX() == this.getX() && closestPreyX.getY() == this.getY()) {
-                    fight(closestPreyX);
-                    attackMode = false;
+        if (attack_mode){
+            Prey closest_prey = findClosestPrey();
+            if (closest_prey != null && Math.abs(closest_prey.getX() - this.getX()) < field_of_view && Math.abs(closest_prey.getY() - this.getY()) < field_of_view){
+                moveTowardsPrey(closest_prey.getX(), closest_prey.getY());
+                if (closest_prey.getX() == this.getX() && closest_prey.getY() == this.getY()) {
+                    fight(closest_prey);
+                    attack_mode = false;
                 }
             }
             else {
@@ -114,37 +94,39 @@ public class Predator extends Animal {
             cooldown--;
         }
         if (cooldown == 0){
-            attackMode = true;
+            attack_mode = true;
             cooldown = (int) (Math.random() * 30) + 10;
         }
     }
 
     /**
-     * Constructor for predator.
-     * @param name name of the predator
-     * @param health health of the predator
-     * @param speed speed of the predator
-     * @param strength strength of the predator
+     *
+     * @param name
+     * @param health
+     * @param speed
+     * @param strength
+     * @param species_name
      */
-    public Predator(int x, int y, String name, int health, int speed, int strength, ArrayList<Animal> animals) {
-        super(x,y,name, health, speed, strength, animals, "Super Mutant");
+    public Predator(int x, int y, String name, int health, int speed, int strength, String species_name, ArrayList<Animal> animals) {
+        super(x,y,name, health, speed, strength, species_name, animals);
+        setDestination_x(4);
+        setDestination_y(4);
+        //randomize cooldown between 10 and 40
         this.cooldown = (int) (Math.random() * 30) + 10;
     }
 
     /**
-     * Get the attack mode of the predator.
-     * @return the attackMode - 0 if not aggressive, 1 if aggressive
+     * @return the attack_mode - 0 if not aggressive, 1 if aggressive
      */
-    public boolean isAttackMode() {
-        return attackMode;
+    public boolean isAttack_mode() {
+        return attack_mode;
     }
 
     /**
-     * Set the attack mode of the predator.
-     * @param attackMode the attackMode to set
+     * @param attack_mode the attack_mode to set
      */
-    public void setAttackMode(boolean attackMode) {
-        this.attackMode = attackMode;
+    public void setAttack_mode(boolean attack_mode) {
+        this.attack_mode = attack_mode;
     }
 }
 

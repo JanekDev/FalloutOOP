@@ -1,316 +1,177 @@
 package com.oopproject.world.animals;
 
-import com.oopproject.world.map.Map;
-import com.oopproject.world.map.Pathfinder;
-import com.oopproject.world.map.locations.*;
+import com.oopproject.world.Map;
+import com.oopproject.world.locations.Hideout;
+import com.oopproject.world.locations.Location;
+import com.oopproject.world.locations.Source;
+import com.oopproject.world.locations.WaterSource;
 import javafx.util.Pair;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Class representing prey that drinks water and eats plants. It is also hunted by predators.
  * @author michal
  */
 public class Prey extends Animal{
-    private int energyLevel;
-    private int waterLevel;
+    private int energy_level;
+    private int water_level;
     private Map map;
     private ArrayList<Animal> animals;
-    private String status = "normal";
-    private Pathfinder preyPathfinder;
-    private int pathIndex = 1;
-    private ArrayList<Pair<Integer,Integer>> path;
-    private boolean hidden = false;
-    private static final double CHILD_PROBABILTY = 0.1;
-    private static final int DECAY_SPEED = 2;
 
-    /**
-     * Get the string representation of the prey.
-     * @return string representation of the prey
-     */
-    public String toString() {
-        return super.toString() + "Energy level: " + energyLevel + "\n" + "Water level: " + waterLevel + "\n" + "Status: " + status + "\n" + "Hidden: " + hidden + "\n";
-    }
 
-    /**
-     * Reroute the prey to the selected location.
-     * @param x x coordinate of the location
-     * @param y y coordinate of the location
-     */
-    public void reroute(int x, int y){
-        if (!this.map.getLocationHashMap().containsKey(new Pair<>(x,y))){
-            return;
-        }
-        this.status = "rerouted";
-        pathIndex = 0;
-        if (this.map.getLocationHashMap().containsKey(new Pair<>(x,y))){
-            this.path = preyPathfinder.findPath(this.getX(), this.getY(), x, y);
-        }
-    }
-
-    /**
-     * Perform a single step of the prey for the rerouted state.
-     */
-    public void stepRerouted(){
-        if (pathIndex < path.size()){
-            Pair<Integer,Integer> nextStep = path.get(pathIndex);
-            this.move(nextStep.getKey(), nextStep.getValue());
-            pathIndex++;
-            statsDecrease();
-        }
-        else {
-            this.status = "normal";
-            pathIndex = 1;
-            path = null;
-        }
-    }
-    /**
-     * Perform a single step of the prey for the thirsty state.
-     */
-    private void stepThirsty() {
-        if (pathIndex < path.size()){
-            Pair<Integer,Integer> nextStep = path.get(pathIndex);
-            this.move(nextStep.getKey(), nextStep.getValue());
-            pathIndex++;
-            statsDecrease();
-        }
-        else {
-            if (this.waterLevel < 100){
-                this.waterLevel += ((WaterSource) this.map.getLocationHashMap().get(new Pair<>(this.getX(), this.getY()))).getPreyReplenishmentSpeed();
-            }
-            else {
-                this.waterLevel = 100;
-                this.status = "normal";
-            }
-        }
-
-    }
-
-    /**
-     * Perform a single step of the prey for the hungry state.
-     */
-    private void stepHungry() {
-        if (pathIndex < path.size()){
-            Pair<Integer,Integer> nextStep = path.get(pathIndex);
-            this.move(nextStep.getKey(), nextStep.getValue());
-            pathIndex++;
-            statsDecrease();
-        }
-        else {
-            if (this.energyLevel < 100){
-                this.energyLevel += ((FoodSource) this.map.getLocationHashMap().get(new Pair<>(this.getX(), this.getY()))).getPreyReplenishmentSpeed();
-            }
-            else {
-                this.energyLevel = 100;
-                this.status = "normal";
-            }
-        }
-    }
-
-    /**
-     * Get the desired location for the prey.
-     * @param wantedLocation location that the prey wants to get to
-     * @return desired location
-     */
-    private Pair<Integer, Integer> getWantedLocation(String wantedLocation){
-        ArrayList<Location> locationsOfInterest = new ArrayList<>();
-        for (Location location : this.map.getLocationHashMap().values()) {
-            if (location.getName().equals(wantedLocation)){
-                locationsOfInterest.add(location);
-            }
-        }
-        // randomize one location from the list
-        int randomIndex = (int) (Math.random() * locationsOfInterest.size());
-        Location wantedLocationObject = locationsOfInterest.get(randomIndex);
-        return new Pair<>(wantedLocationObject.getX(), wantedLocationObject.getY());
-    }
-
-    /**
-     * Perform a single step of the prey.
-     */
     @Override
     public void step() {
+        Location current_location = map.getLocation(getX(), getY());
+        if (current_location instanceof Hideout) {
 
-        if (waterLevel <= 0 || energyLevel <= 0) {
-            this.setHealth(0);
         }
-        switch (status) {
-            case "rerouted":
-                stepRerouted();
-                break;
-            case "thirsty":
-                // find water source
-                stepThirsty();
-                break;
-            case "hungry":
-                // find food source
-                stepHungry();
-                return;
-            case "normal":
-                if (waterLevel < 65) {
-                    status = "thirsty";
-                    Location waterSource = this.map.getLocationHashMap().get(getWantedLocation("Nuka Cola Vending Machine"));
-                    this.path = preyPathfinder.findPath(this.getX(), this.getY(), waterSource.getX(), waterSource.getY());
-                    this.pathIndex = 1;
-                    stepThirsty();
-                } else if (energyLevel < 65) {
-                    status = "hungry";
-                    Location foodSource = this.map.getLocationHashMap().get(getWantedLocation("Sugar Bombs"));
-                    this.path = preyPathfinder.findPath(this.getX(), this.getY(), foodSource.getX(), foodSource.getY());
-                    this.pathIndex = 1;
-                    stepHungry();
-                } else {
-                    status = "normal";
-                    // if at the hideout, create a new animal
-                    Location currentLocation = this.map.getLocationHashMap().get(new Pair<>(this.getX(), this.getY()));
-                    if (currentLocation.getName().equals("Vault 111") && currentLocation.getPreyInside().size() < currentLocation.getMaxInside() && CHILD_PROBABILTY > Math.random()) {
-                        Prey child = new Prey(this);
-                        new Thread(child).start();
-                        child.setRunning(true);
-                        currentLocation.enter(child);
-                        this.animals.add(child);
-                        this.pathIndex = 1;
-                        statsDecrease();
-                    }
-                    else if (currentLocation.getName().equals("Vault 111")){
-                        statsDecrease();
-                    }
-                    else if (path==null){
-                        Location hideout = this.map.getLocationHashMap().get(getWantedLocation("Vault 111"));
-                        this.path = preyPathfinder.findPath(this.getX(), this.getY(), hideout.getX(), hideout.getY());
-                        this.pathIndex = 1;
-                    }
-                    else if (pathIndex < path.size()){
-                        Pair<Integer,Integer> nextStep = path.get(pathIndex);
-                        this.move(nextStep.getKey(), nextStep.getValue());
-                        pathIndex++;
-                        statsDecrease();
+        else if (current_location instanceof WaterSource) {
+            water_level = 100;
+        }
+        else if (current_location instanceof Source) {
+            energy_level = 100;
+        }
+        else {
+            water_level -= 10;
+            energy_level -= 10;
+        }
+    }
+    public Location findLocation (String type){
+        switch (type) {
+            case "WaterSource":
+                for (int i = 0; i < 10; i++) {
+                    int x = (int) (Math.random() * 22);
+                    int y = (int) (Math.random() * 22);
+                    Location current_location = map.getLocation(x, y);
+                    if (current_location instanceof WaterSource) {
+                        return current_location;
                     }
                 }
+                return null;
+            case "Source":
+                for (int i = 0; i < 10; i++) {
+                    int x = (int) (Math.random() * 22);
+                    int y = (int) (Math.random() * 22);
+                    Location current_location = map.getLocation(x, y);
+                    if (current_location instanceof Source) {
+                        return current_location;
+                    }
+                }
+                return null;
+            case "Hideout":
+                for (int i = 0; i < 10; i++) {
+                    int x = (int) (Math.random() * 22);
+                    int y = (int) (Math.random() * 22);
+                    Location current_location = map.getLocation(x, y);
+                    if (current_location instanceof Hideout) {
+                        return current_location;
+                    }
+                }
+                return null;
         }
+        return null;
     }
-
-    /**
-     * Decrease the stats of the prey.
-     */
-    void statsDecrease(){
-        this.waterLevel -= DECAY_SPEED;
-        this.energyLevel -= DECAY_SPEED;
-    }
-
-    /**
-     * Move the prey to a new location. - implementazione cacio e pepe.
-     * @param x x offset
-     * @param y y offset
-     */
     @Override
     public void move(int x, int y) {
-        Location new_location = getMap().getLocation(x, y);
-        Location current_location = getMap().getLocation(this.getX(), this.getY());
-        if (new_location != null) {
-            current_location.leave(this);
-            new_location.enter(this);
-        }
-        int currX = this.getX();
-        int currY = this.getY();
-        super.move(x - currX, y - currY);
+        // check what is on the new location
+        Location new_location = map.getLocation(this.getX() + x, this.getY() + y);
+        Location current_location = map.getLocation(this.getX(), this.getY());
+        current_location.leave(this);
+        new_location.enter(this);
+        super.move(x, y);
     }
-    /**
-     * Run the prey thread.
-     */
     @Override
     public void run(){
         super.run();
-        getMap().getLocation(this.getX(), this.getY()).leave(this);
+        map.getLocation(this.getX(), this.getY()).leave(this);
     }
 
     /**
      *
-     * @param energyLevel
-     * @param waterLevel
+     * @param energy_level
+     * @param water_level
      * @param name
      * @param health
      * @param speed
      * @param strength
+     * @param species_name
      */
-    public Prey(int x, int y, int energyLevel, int waterLevel, String name, int health, int speed, int strength, Map map, ArrayList<Animal> animals) {
-        super(x, y, name, health, speed, strength, animals, "Human (Vault Dweller)");
-        this.energyLevel = energyLevel;
-        this.waterLevel = waterLevel;
-        this.setMap(map);
-        this.animals = animals;
-        this.preyPathfinder = new Pathfinder(this.map.getLocationHashMap());
-    }
-
-    /**
-     * Constructor used in cloning.
-     * @param prey the prey to clone
-     */
-    public Prey(Prey prey){
-        super(prey.getX(), prey.getY(), prey.getName() + "I", prey.getHealth(), prey.getSpeed(), prey.getStrength(), prey.getAnimals(), prey.getSpecies());
-        this.energyLevel = prey.getEnergyLevel();
-        this.waterLevel = prey.getWaterLevel();
-        this.setMap(prey.getMap());
-        this.animals = prey.getAnimals();
-        this.preyPathfinder = new Pathfinder(this.map.getLocationHashMap());
-    }
-
-    /**
-     * @return the energyLevel
-     */
-    public int getEnergyLevel() {
-        return energyLevel;
-    }
-
-    /**
-     * @param energyLevel the energyLevel to set
-     */
-    public void setEnergyLevel(int energyLevel) {
-        this.energyLevel = energyLevel;
-    }
-
-    /**
-     * @return the waterLevel
-     */
-    public int getWaterLevel() {
-        return waterLevel;
-    }
-
-    /**
-     * @param waterLevel the waterLevel to set
-     */
-    public void setWaterLevel(int waterLevel) {
-        this.waterLevel = waterLevel;
-    }
-    /**
-     * Get the map.
-     * @return the map
-     */
-    public Map getMap() {
-        return map;
-    }
-
-    /**
-     * Set the map.
-     * @param map the map to set
-     */
-    public void setMap(Map map) {
+    public Prey(int x, int y, int energy_level, int water_level, String name, int health, int speed, int strength, String species_name, Map map, ArrayList<Animal> animals) {
+        super(x, y, name, health, speed, strength, species_name, animals);
+        this.energy_level = energy_level;
+        this.water_level = water_level;
         this.map = map;
+        this.animals = animals;
     }
 
     /**
-     * Check if a prey is hidden.
-     * @return true if hidden, false otherwise
+     * @return the energy_level
      */
-    public boolean isHidden() {
-        return hidden;
+    public int getEnergy_level() {
+        return energy_level;
     }
 
     /**
-     * Set the hidden status of the prey.
-     * @param hidden the hidden status to set
+     * @param energy_level the energy_level to set
      */
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
+    public void setEnergy_level(int energy_level) {
+        this.energy_level = energy_level;
     }
+
+    /**
+     * @return the water_level
+     */
+    public int getWater_level() {
+        return water_level;
+    }
+
+    /**
+     * @param water_level the water_level to set
+     */
+    public void setWater_level(int water_level) {
+        this.water_level = water_level;
+    }
+
+    public void drinkWater(Source source){
+
+    }
+    /**
+     * Method for prey to eat the plants.
+     * @param source the food source to be eaten
+     */
+    public void eatPlant(Source source){
+
+    }
+
+    /**
+     * Method for prey to reproduce.
+     */
+    public void reproduce(){
+
+    }
+
+    /**
+     * Method for prey to return to hideout.
+     */
+    public void returnToHideout(){
+
+    }
+
+    /**
+     * Method for prey to find source of food or water.
+     */
+    public void findSource(){
+
+    }
+
+    /**
+     * Method for prey to die.
+     */
+    public void die(){
+
+    }
+
 }
 

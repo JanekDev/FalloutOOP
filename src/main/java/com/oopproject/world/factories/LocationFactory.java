@@ -1,31 +1,33 @@
 package com.oopproject.world.factories;
 
-import com.oopproject.world.map.locations.*;
-
-/**
- * The class used to create the locations. Est. 2077.
- */
+import com.oopproject.world.animals.*;
+import com.oopproject.world.locations.*;
 public class LocationFactory {
-    private static final int MAX_INSIDE_PATH = 1000;
     /**
-     * Creates a location object based on the type of the location.
-     * @param type type of the location
-     * @param x x coordinate of the location
-     * @param y y coordinate of the location
-     * @return the created location if successful, null otherwise
+     *
+     * @param type
+     * @param x
+     * @param y
+     * @return
      */
+    // set the math random to some value to test
     public static Location createLocation(String type, int x, int y) {
-        int replenishment = (int) (Math.random() * 10) + 1;
-        int maxInside = (int) (Math.random() * 7) + 1;
+        int replenishment = (int) (Math.random() * 10) + 11;
+        int max_inside = (int) (Math.random() * 7) + 1;
+        // name is a randomized string of length 5
+        String name = "";
+        for (int i = 0; i < 5; i++) {
+            name += (char) ((int) (Math.random() * 26) + 97);
+        }
         switch (type) {
             case "Path":
-                return new Path(x, y, MAX_INSIDE_PATH);
+                return new Path(x, y, 1000);
             case "Water":
-                return new WaterSource(x, y, "Nuka Cola Vending Machine", replenishment, maxInside);
+                return new WaterSource(x, y, name, replenishment, max_inside);
             case "Food":
-                return new FoodSource(x, y, "Sugar Bombs", replenishment, maxInside);
+                return new FoodSource(x, y, name, replenishment, max_inside);
             case "Hideout":
-                return new Hideout(x, y, "Vault 111", maxInside);
+                return new Hideout(x, y, name, max_inside);
             default:
                 return null;
         }
