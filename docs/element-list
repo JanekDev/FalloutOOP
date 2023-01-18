@@ -1,0 +1,9 @@
+module:com.example.oopproject
+com.oopproject
+com.oopproject.gui
+com.oopproject.world
+com.oopproject.world.animals
+com.oopproject.world.factories
+com.oopproject.world.interfaces
+com.oopproject.world.map
+com.oopproject.world.map.locations
