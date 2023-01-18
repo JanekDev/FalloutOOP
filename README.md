@@ -10,7 +10,7 @@ To run the project you need to have Java 8+ installed. You can download it from 
 ## How to use
 ### Disclaimer
 This is a simulation of a nuclear wasteland and its harsh conditions so tread carefully! 
-We don't take responsibility for damages done by:
+We take no responsibility for damages done by:
 - Radiation
 - Mutants
 - Super Mutants
@@ -58,7 +58,7 @@ It simply displays the whole world on a map. You can click a specific object to 
 <p align="center"><img src="img/map.png" /></p>
 
 ## Final remarks
-This project is under MIT license which is also accesable in this repository.
+This project is under the MIT license which is also accesable in this repository.
 
 
 
